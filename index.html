@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 AI Image Generator</h1>
+        <p class="subtitle">Powered by Stable Diffusion</p>
+        
+        <div class="input-section">
+            <textarea 
+                id="promptInput" 
+                placeholder="Describe the image you want to generate... (e.g., 'a photo of an astronaut riding a horse on mars')"
+                rows="3"
+            ></textarea>
+            
+            <button id="generateBtn" onclick="generateImage()">
+                <span id="btnText">Generate Image</span>
+                <span id="loader" class="loader" style="display: none;"></span>
+            </button>
+        </div>
+
+        <div id="apiKeySection" class="api-key-section">
+            <p class="info-text">⚠️ You need a Hugging Face API token. Get one <a href="https://huggingface.co/settings/tokens" target="_blank">here</a></p>
+            <input 
+                type="password" 
+                id="apiKeyInput" 
+                placeholder="Enter your Hugging Face API token"
+            >
+            <button onclick="saveApiKey()">Save Token</button>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        
+        <div id="imageContainer" class="image-container" style="display: none;">
+            <img id="generatedImage" alt="Generated image">
+            <button onclick="downloadImage()" class="download-btn">Download Image</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

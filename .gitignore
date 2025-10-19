@@ -1,0 +1,23 @@
+# Python version (not needed for Netlify deployment)
+python-version/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated images (optional - uncomment if you don't want to commit generated images)
+# *.png
+# *.jpg
