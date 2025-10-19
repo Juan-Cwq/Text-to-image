@@ -33,14 +33,8 @@ function saveApiKey() {
 
 async function generateImage() {
     const prompt = document.getElementById('promptInput').value.trim();
-    const apiKey = localStorage.getItem('hf_api_key');
     
     // Validation
-    if (!apiKey) {
-        showError('Please enter your Hugging Face API token first');
-        return;
-    }
-    
     if (!prompt) {
         showError('Please enter a prompt to generate an image');
         return;
@@ -60,87 +54,31 @@ async function generateImage() {
     errorMessage.style.display = 'none';
     
     try {
-        // Call Hugging Face Inference API
-        // Try multiple models in case one is unavailable
-        const models = [
-            'black-forest-labs/FLUX.1-schnell',
-            'stabilityai/stable-diffusion-xl-base-1.0',
-            'runwayml/stable-diffusion-v1-5',
-            'CompVis/stable-diffusion-v1-4'
-        ];
+        // Use Pollinations.ai - Free, no API key required!
+        // This is a simple URL-based API that returns images directly
+        const encodedPrompt = encodeURIComponent(prompt);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
         
-        let response = null;
-        let lastError = null;
+        // Create a new image to test if it loads
+        const img = new Image();
         
-        // Try each model until one works
-        for (const model of models) {
-            try {
-                response = await fetch(
-                    `https://api-inference.huggingface.co/models/${model}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${apiKey}`,
-                        },
-                        body: JSON.stringify({
-                            inputs: prompt,
-                            options: {
-                                wait_for_model: true
-                            }
-                        }),
-                    }
-                );
-                
-                if (response.ok) {
-                    console.log(`Successfully using model: ${model}`);
-                    break; // Success! Exit the loop
-                }
-                lastError = `Model ${model}: ${response.status}`;
-            } catch (e) {
-                lastError = e.message;
-                continue;
-            }
-        }
+        // Wait for image to load
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imageUrl;
+        });
         
-        if (!response || !response.ok) {
-            throw new Error(`All models failed. Last error: ${lastError}. Your API token might not have access to these models. Try creating a new token at https://huggingface.co/settings/tokens`);
-        }
-        
-        // Check content type to ensure it's an image
-        const contentType = response.headers.get('content-type');
-        
-        // If it's JSON, it's probably an error or "model loading" message
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            // Model is loading
-            if (data.estimated_time) {
-                throw new Error(`Model is loading. Please wait ${Math.ceil(data.estimated_time)} seconds and try again.`);
-            }
-            throw new Error('Unexpected response from API. Please try again.');
-        }
-        
-        // Convert response to blob and display
-        const blob = await response.blob();
-        
-        // Verify it's actually an image
-        if (!blob.type.startsWith('image/')) {
-            throw new Error('API did not return an image. The model might be loading. Please wait 20-30 seconds and try again.');
-        }
-        
-        const imageUrl = URL.createObjectURL(blob);
-        
+        // Display the image
         const generatedImage = document.getElementById('generatedImage');
         generatedImage.src = imageUrl;
-        generatedImage.dataset.blob = imageUrl; // Store for download
+        generatedImage.dataset.imageUrl = imageUrl; // Store for download
         
         imageContainer.style.display = 'block';
         
     } catch (error) {
         console.error('Error:', error);
-        showError(`Error generating image: ${error.message}`);
+        showError(`Error generating image: ${error.message}. Please try again.`);
     } finally {
         // Reset button
         generateBtn.disabled = false;
@@ -158,16 +96,30 @@ function showError(message, isError = true) {
     errorMessage.style.borderLeft = isError ? '4px solid #c33' : '4px solid #3c3';
 }
 
-function downloadImage() {
+async function downloadImage() {
     const generatedImage = document.getElementById('generatedImage');
-    const imageUrl = generatedImage.dataset.blob;
+    const imageUrl = generatedImage.dataset.imageUrl;
     
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = 'generated-image.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+        // Fetch the image and convert to blob for download
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'ai-generated-image.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Clean up
+        URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('Download error:', error);
+        // Fallback: open in new tab
+        window.open(imageUrl, '_blank');
+    }
 }
 
 // Allow Enter key to generate (Shift+Enter for new line)

@@ -1,24 +1,19 @@
 # AI Image Generator
 
-A beautiful web application that generates images from text prompts using Stable Diffusion via the Hugging Face Inference API.
+A beautiful web application that generates images from text prompts using Pollinations.ai - completely free with no API key required!
 
 ## Features
 
 - 🎨 Generate images from text descriptions
 - 🚀 Fast and responsive UI
 - 💾 Download generated images
-- 🔐 Secure API key storage (local only)
+- 🔓 **No API key needed** - completely free!
 - 📱 Mobile-friendly design
+- ⚡ Instant generation
 
 ## Setup
 
-### 1. Get a Hugging Face API Token
-
-1. Go to [Hugging Face](https://huggingface.co/settings/tokens)
-2. Create a new token (read access is sufficient)
-3. Copy the token
-
-### 2. Deploy to Netlify
+### Deploy to Netlify
 
 #### Option A: Deploy via Netlify UI
 1. Go to [Netlify](https://app.netlify.com/)
@@ -31,12 +26,12 @@ npm install -g netlify-cli
 netlify deploy --prod
 ```
 
-### 3. Use the App
+### Use the App
 
 1. Open your deployed site
-2. Enter your Hugging Face API token (stored locally in your browser)
-3. Enter a prompt and click "Generate Image"
-4. Wait for the magic to happen!
+2. Enter a prompt describing the image you want
+3. Click "Generate Image"
+4. Download your creation!
 
 ## Files
 
@@ -47,7 +42,7 @@ netlify deploy --prod
 
 ## How It Works
 
-This app uses the **Hugging Face Inference API** to generate images without needing a GPU or Python backend. The API calls are made directly from the browser, making it perfect for static hosting on Netlify.
+This app uses **Pollinations.ai**, a free AI image generation service that requires no API key. The service uses advanced AI models to generate high-quality images directly from text prompts. All processing happens through simple URL-based API calls, making it perfect for static hosting on Netlify.
 
 ## Example Prompts
 
@@ -58,17 +53,18 @@ This app uses the **Hugging Face Inference API** to generate images without need
 
 ## Notes
 
-- First generation may take 20-30 seconds as the model loads
-- Subsequent generations are faster
-- Free tier has rate limits
-- API token is stored only in your browser (localStorage)
+- ✅ Completely free - no API key or account needed
+- ✅ No rate limits for basic usage
+- ✅ Generates 1024x1024 images
+- ✅ Works on all devices
+- ⚡ Usually generates in 5-10 seconds
 
-## Alternative Deployment Options
+## Why Pollinations.ai?
 
-If you need more control or want to run the Python version:
-
-- **Hugging Face Spaces** - Deploy the Python notebook directly
-- **Render/Railway** - For Python backend with GPU support
-- **Replicate** - Serverless GPU inference
+- **Free Forever** - No hidden costs or API limits
+- **No Registration** - Start generating immediately
+- **High Quality** - Uses state-of-the-art AI models
+- **Privacy Friendly** - No tracking or data collection
+- **Open Source** - Community-driven project
 
 Enjoy creating AI art! 🎨✨
