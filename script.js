@@ -62,10 +62,18 @@ async function generateImage() {
         // Create a new image to test if it loads
         const img = new Image();
         
-        // Wait for image to load
+        // Wait for image to load with proper error handling
         await new Promise((resolve, reject) => {
             img.onload = resolve;
-            img.onerror = reject;
+            img.onerror = () => reject(new Error('Failed to generate image. The service might be busy. Please try again in a moment.'));
+            
+            // Set a timeout in case the image takes too long
+            setTimeout(() => {
+                if (!img.complete) {
+                    reject(new Error('Image generation timed out. Please try again.'));
+                }
+            }, 45000); // 45 second timeout
+            
             img.src = imageUrl;
         });
         
@@ -78,7 +86,8 @@ async function generateImage() {
         
     } catch (error) {
         console.error('Error:', error);
-        showError(`Error generating image: ${error.message}. Please try again.`);
+        const errorMsg = error?.message || 'Unknown error occurred. Please try again.';
+        showError(`Error generating image: ${errorMsg}`);
     } finally {
         // Reset button
         generateBtn.disabled = false;
