@@ -3,8 +3,17 @@ window.onload = function() {
     const savedApiKey = localStorage.getItem('hf_api_key');
     if (savedApiKey) {
         document.getElementById('apiKeySection').style.display = 'none';
+        document.getElementById('resetKeySection').style.display = 'block';
     }
 };
+
+function resetApiKey() {
+    localStorage.removeItem('hf_api_key');
+    document.getElementById('apiKeySection').style.display = 'block';
+    document.getElementById('resetKeySection').style.display = 'none';
+    document.getElementById('apiKeyInput').value = '';
+    showError('API token cleared. Please enter a new token.', false);
+}
 
 function saveApiKey() {
     const apiKey = document.getElementById('apiKeyInput').value.trim();
@@ -15,6 +24,7 @@ function saveApiKey() {
     
     localStorage.setItem('hf_api_key', apiKey);
     document.getElementById('apiKeySection').style.display = 'none';
+    document.getElementById('resetKeySection').style.display = 'block';
     showError('API token saved successfully!', false);
     setTimeout(() => {
         document.getElementById('errorMessage').style.display = 'none';
@@ -51,39 +61,49 @@ async function generateImage() {
     
     try {
         // Call Hugging Face Inference API
-        // Using a more accessible model that doesn't require special permissions
-        const response = await fetch(
-            'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5',
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    options: {
-                        wait_for_model: true
-                    }
-                }),
-            }
-        );
+        // Try multiple models in case one is unavailable
+        const models = [
+            'black-forest-labs/FLUX.1-schnell',
+            'stabilityai/stable-diffusion-xl-base-1.0',
+            'runwayml/stable-diffusion-v1-5',
+            'CompVis/stable-diffusion-v1-4'
+        ];
         
-        // Check if response is ok
-        if (!response.ok) {
-            let errorMsg = `HTTP error! status: ${response.status}`;
+        let response = null;
+        let lastError = null;
+        
+        // Try each model until one works
+        for (const model of models) {
             try {
-                const errorData = await response.json();
-                if (errorData.error) {
-                    errorMsg = errorData.error;
-                    // Check for permission errors
-                    if (errorMsg.includes('permissions') || errorMsg.includes('Inference Providers')) {
-                        errorMsg = 'API Token Error: Your token needs "Make calls to the serverless Inference API" permission. Please create a new token at https://huggingface.co/settings/tokens with the correct permissions.';
+                response = await fetch(
+                    `https://api-inference.huggingface.co/models/${model}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                        },
+                        body: JSON.stringify({
+                            inputs: prompt,
+                            options: {
+                                wait_for_model: true
+                            }
+                        }),
                     }
+                );
+                
+                if (response.ok) {
+                    console.log(`Successfully using model: ${model}`);
+                    break; // Success! Exit the loop
                 }
+                lastError = `Model ${model}: ${response.status}`;
             } catch (e) {
-                // If error response is not JSON, use status text
+                lastError = e.message;
+                continue;
             }
-            throw new Error(errorMsg);
+        }
+        
+        if (!response || !response.ok) {
+            throw new Error(`All models failed. Last error: ${lastError}. Your API token might not have access to these models. Try creating a new token at https://huggingface.co/settings/tokens`);
         }
         
         // Check content type to ensure it's an image
