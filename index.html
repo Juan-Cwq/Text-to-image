@@ -25,7 +25,12 @@
         </div>
 
         <div id="apiKeySection" class="api-key-section">
-            <p class="info-text">⚠️ You need a Hugging Face API token. Get one <a href="https://huggingface.co/settings/tokens" target="_blank">here</a></p>
+            <p class="info-text">⚠️ You need a Hugging Face API token with proper permissions</p>
+            <p class="info-text" style="font-size: 13px; margin-top: 5px;">
+                📝 <strong>Important:</strong> When creating your token at 
+                <a href="https://huggingface.co/settings/tokens" target="_blank">huggingface.co/settings/tokens</a>, 
+                make sure to enable <strong>"Make calls to the serverless Inference API"</strong> permission!
+            </p>
             <input 
                 type="password" 
                 id="apiKeyInput" 

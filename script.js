@@ -57,7 +57,6 @@ async function generateImage() {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     inputs: prompt,
@@ -68,13 +67,48 @@ async function generateImage() {
             }
         );
         
+        // Check if response is ok
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            let errorMsg = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData.error) {
+                    errorMsg = errorData.error;
+                    // Check for permission errors
+                    if (errorMsg.includes('permissions') || errorMsg.includes('Inference Providers')) {
+                        errorMsg = 'API Token Error: Your token needs "Make calls to the serverless Inference API" permission. Please create a new token at https://huggingface.co/settings/tokens with the correct permissions.';
+                    }
+                }
+            } catch (e) {
+                // If error response is not JSON, use status text
+            }
+            throw new Error(errorMsg);
+        }
+        
+        // Check content type to ensure it's an image
+        const contentType = response.headers.get('content-type');
+        
+        // If it's JSON, it's probably an error or "model loading" message
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            // Model is loading
+            if (data.estimated_time) {
+                throw new Error(`Model is loading. Please wait ${Math.ceil(data.estimated_time)} seconds and try again.`);
+            }
+            throw new Error('Unexpected response from API. Please try again.');
         }
         
         // Convert response to blob and display
         const blob = await response.blob();
+        
+        // Verify it's actually an image
+        if (!blob.type.startsWith('image/')) {
+            throw new Error('API did not return an image. The model might be loading. Please wait 20-30 seconds and try again.');
+        }
+        
         const imageUrl = URL.createObjectURL(blob);
         
         const generatedImage = document.getElementById('generatedImage');
