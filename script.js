@@ -51,8 +51,9 @@ async function generateImage() {
     
     try {
         // Call Hugging Face Inference API
+        // Using a more accessible model that doesn't require special permissions
         const response = await fetch(
-            'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1-base',
+            'https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5',
             {
                 method: 'POST',
                 headers: {
