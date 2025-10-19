@@ -54,28 +54,55 @@ async function generateImage() {
     errorMessage.style.display = 'none';
     
     try {
-        // Use Pollinations.ai - Free, no API key required!
-        // This is a simple URL-based API that returns images directly
-        const encodedPrompt = encodeURIComponent(prompt);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true`;
+        // Try multiple free services for better reliability
+        let imageUrl = null;
+        let lastError = null;
         
-        // Create a new image to test if it loads
-        const img = new Image();
-        
-        // Wait for image to load with proper error handling
-        await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error('Failed to generate image. The service might be busy. Please try again in a moment.'));
+        // Service 1: Pollinations.ai (fast but sometimes unreliable)
+        try {
+            const encodedPrompt = encodeURIComponent(prompt);
+            const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
             
-            // Set a timeout in case the image takes too long
-            setTimeout(() => {
-                if (!img.complete) {
-                    reject(new Error('Image generation timed out. Please try again.'));
+            const img = new Image();
+            await Promise.race([
+                new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = pollinationsUrl;
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 15000))
+            ]);
+            
+            imageUrl = pollinationsUrl;
+        } catch (e) {
+            lastError = 'Pollinations.ai failed';
+            console.log('Pollinations failed, trying alternative...');
+            
+            // Service 2: Hugging Face with a simpler, more reliable endpoint
+            try {
+                const response = await fetch('https://api-inference.huggingface.co/models/prompthero/openjourney-v4', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ inputs: prompt })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    imageUrl = URL.createObjectURL(blob);
+                } else {
+                    throw new Error('HF failed');
                 }
-            }, 45000); // 45 second timeout
-            
-            img.src = imageUrl;
-        });
+            } catch (e2) {
+                lastError = 'All services failed';
+                throw new Error('Image generation services are currently unavailable. Please try again in a few moments.');
+            }
+        }
+        
+        if (!imageUrl) {
+            throw new Error('Failed to generate image. Please try again.');
+        }
         
         // Display the image
         const generatedImage = document.getElementById('generatedImage');
